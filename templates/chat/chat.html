@@ -1,122 +1,51 @@
 {% extends 'base.html' %}
 
 {% block title %}
-    Чат {{ chat.title }} | {{ block.super }}
+    Чаты | {{ block.super }}
 {% endblock %}
 
 {% block styles %}
-    <style>
-        .container {
-            height: 100vh;
-        }
-
-        .messages {
-            display: flex;
-            flex-direction: column;
-            max-height: 100%;
-            overflow: scroll;
-            padding: 10px 0;
-        }
-
-        .msg-container {
-            max-width: 50%;
-            margin: 5px 0;
-        }
-
-        .msg-box {
-            display: flex;
-            flex-direction: column;
-            background: #5b5e6c;
-            padding: 10px 10px 0 10px;
-            border-radius: 6px;
-            min-width: 150px;
-            width: fit-content;
-            box-shadow: 0 0 2px rgba(0, 0, 0, .12), 0 2px 4px rgba(0, 0, 0, .24);
-        }
-
-        .msg {
-            display: inline-block;
-            font-size: 14px;
-            color: rgba(255, 255, 255, .9);
-            margin: 8px 0 4px 0;
-        }
-
-        .username {
-            color: rgba(0, 0, 0, .4);
-            font-size: 10px;
-            margin: 5px 0;
-        }
-
-        .msg-self {
-            align-self: flex-end;
-        }
-
-        .msg-self .msg-box {
-            background: #2671ff;
-        }
-
-        .msg-self .username {
-            align-self: flex-end;
-        }
-    </style>
+    {% load static %}
+    <link rel='stylesheet prefetch' href='http://fonts.googleapis.com/css?family=Open+Sans'>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" media="screen" type="text/css"/>
 {% endblock %}
 
 {% block content %}
-    <section class="chat">
-        <div class="container d-flex flex-column justify-content-between">
-            <div class="messages">
-                {% for message in chat.messages.all %}
-                    {% if message.sender == user %}
-                        <div class="msg-container msg-self">
-                            <div class="msg-box">
-                                <div class="message">
-                                    <p class="msg">{{ message.message }}</p>
-                                </div>
-                                <span class="username">{{ message.sender }}</span>
-                            </div>
-                        </div>
-                    {% else %}
-                        <div class="msg-container">
-                            <div class="msg-box">
-                                <div class="message">
-                                    <p class="msg" id="msg-0">{{ message.message }}</p>
-                                </div>
-                                <span class="username">{{ message.sender }}</span>
-                            </div>
-                        </div>
-                    {% endif %}
-                {% endfor %}
-            </div>
-
-            <div class="input-group p-3 bg-dark">
-                <input id="message-input" type="text" class="form-control" placeholder="Сообщение..."
-                       aria-label="Сообщение" aria-describedby="basic-addon2">
-                <div class="input-group-append">
-                    <button id="send-btn" class="btn btn-outline-success" type="button">Button</button>
+    <div class="window-wrapper">
+        <div class="window-area">
+            <div class="conversation-list">
+                <ul>
+                    {% for chat in chats %}
+                        <li class="item active"><span id="{{ chat.pk }}">{{ chat.title }}</span></li>
+                    {% endfor %}
+                </ul>
+                <div class="my-account">
+                    <div class="image">
+                        <img src="https://124ural.ru/wp-content/uploads/2017/04/no-avatar.png" alt="image">
+                        <i class="fa fa-circle online"></i>
+                    </div>
+                    <div class="name">
+                        <span>{{ user.username }}</span>
+                    </div>
                 </div>
             </div>
+            <div class="chat-area"></div>
         </div>
-    </section>
+    </div>
 {% endblock %}
 
 {% block script %}
     <script>
-        let messages_container = document.querySelector(".messages");
-        messages_container.scrollTop = messages_container.scrollHeight;
-
         let last_message;
 
-        let send_btn = document.getElementById("send-btn");
-        let message_input = document.getElementById("message-input");
-
-        let send_message = () => {
+        let send_message = (id, e) => {
             let message = message_input.value;
             if (message.replace(/\s/g, '') === "") {
                 message_input.value = "";
                 return;
             }
             message_input.value = "";
-            fetch("{% url 'chat-ajax' chat.id %}",
+            fetch(`/ajax/${id}/`,
                 {
                     method: "POST",
                     credentials: 'same-origin',
@@ -126,54 +55,89 @@
                     },
                     body: JSON.stringify(message)
                 }
-            ).then(e => e.json()).then(messages => construct_message(messages))
+            ).then(e => e.json()).then(messages => construct_message(messages.messages))
         }
 
-        let load_messages = () => {
-            fetch("{% url 'chat-ajax' chat.id %}")
+        let load_messages = (id) => {
+            fetch(`/ajax/${id}`)
                 .then(e => e.json())
-                .then(messages => construct_message(messages))
+                .then(messages => construct_message(messages.messages))
         }
 
         let construct_message = (messages) => {
-            let messages_container = document.querySelector(".messages");
+            let messages_container = document.querySelector(".chat-list ul");
             let div = document.createElement("div");
             for (let message of messages) {
                 if ("{{ user.username }}" === message.sender) {
                     div.innerHTML += `
-                        <div class="msg-container msg-self">
-                            <div class="msg-box">
-                                <div class="message">
-                                    <p class="msg" id="msg-0">${message.message}</p>
-                                </div>
-                                <span class="username">${message.sender}</span>
+                        <li class="me">
+                            <div class="name">
+                                <span class="">${message.sender}</span>
                             </div>
-                        </div>
+                            <div class="message">
+                                <p>${message.message}</p>
+                                <span class="msg-time">${message.time}</span>
+                            </div>
+                        </li>
                     `
                 } else {
                     div.innerHTML += `
-                        <div class="msg-container">
-                            <div class="msg-box">
-                                <div class="message">
-                                    <p class="msg" id="msg-0">${message.message}</p>
-                                </div>
-                                <span class="username">${message.sender}</span>
+                        <li class="">
+                            <div class="name">
+                                <span class="">${message.sender}</span>
                             </div>
-                        </div>
+                            <div class="message">
+                                <p>${message.message}</p>
+                                <span class="msg-time">${message.time}</span>
+                            </div>
+                        </li>
                     `
                 }
             }
             messages_container.innerHTML = div.innerHTML;
-
             if (last_message) {
                 if (last_message.time !== messages[messages.length - 1].time) {
                     last_message = messages[messages.length - 1];
+                    let messages_container = document.querySelector(".chat-list");
                     messages_container.scrollTop = messages_container.scrollHeight;
                 }
-            } else last_message = messages.pop();
+            } else last_message = messages[messages.length - 1];
         }
 
-        send_btn.addEventListener('click', send_message);
-        setInterval(load_messages, 2000);
+        let open_chat = (e) => {
+            clearTimeout(timer);
+            let chat = document.querySelector('.chat-area');
+            fetch(`/ajax/${e.target.id}`)
+                .then(e => e.json())
+                .then(messages => {
+                    chat.innerHTML = `
+                        <div class="title"><h3>${messages.chat_title}</h3></div>
+                        <div class="chat-list">
+                            <ul></ul>
+                        </div>
+                        <div class="input-area">
+                            <div class="input-wrapper">
+                                <input id="message-input" type="text" class="input form-control" placeholder="Сообщение..."
+                                       aria-label="Сообщение" aria-describedby="basic-addon2">
+                                <i id="send-btn" class="send-btn fas fa-paper-plane input-group-text"></i>
+                            </div>
+                        </div>
+                    `;
+                    construct_message(messages.messages);
+                    let messages_container = document.querySelector(".chat-list");
+                    messages_container.scrollTop = messages_container.scrollHeight;
+
+                    let send_btn = document.getElementById("send-btn");
+                    message_input = document.getElementById("message-input");
+                    send_btn.addEventListener('click', send_message.bind(null, e.target.id));
+
+                    timer = setInterval(load_messages, 2000, e.target.id);
+                })
+        };
+
+        let timer;
+        let message_input;
+        let chats = document.querySelectorAll('.conversation-list .item');
+        chats.forEach(chat => chat.addEventListener('click', open_chat));
     </script>
 {% endblock %}

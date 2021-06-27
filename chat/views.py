@@ -12,14 +12,17 @@ from chat.forms import LoginForm
 from chat.models import Chat, Message
 
 
-class ChatView(LoginRequiredMixin, generic.DetailView):
+class ChatListView(LoginRequiredMixin, generic.ListView):
     """ Отображение чата. """
     login_url = reverse_lazy('login')
     redirect_field_name = 'next'
 
     model = Chat
-    context_object_name = 'chat'
+    context_object_name = 'chats'
     template_name = 'chat/chat.html'
+
+    def get_queryset(self):
+        return Chat.objects.filter(members=self.request.user).prefetch_related('messages')
 
 
 class LoginView(Login):
@@ -47,4 +50,7 @@ def ajax_load_messages(request, pk):
             "message": m.message,
             "time": m.date_sending,
         })
-    return JsonResponse(message_list, safe=False)
+    return JsonResponse({
+        "messages": message_list,
+        "chat_title": chat.title,
+    }, safe=False)
