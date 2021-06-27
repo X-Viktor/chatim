@@ -27,13 +27,9 @@ class ChatListView(LoginRequiredMixin, generic.ListView):
 
 class LoginView(Login):
     """Авторизация."""
+    redirect_authenticated_user = True
     form_class = LoginForm
     template_name = 'login.html'
-
-    def get(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            return redirect('chat')
-        return super(LoginView, self).get(request, *args, **kwargs)
 
 
 @login_required
