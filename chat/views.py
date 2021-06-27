@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView as Login
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import generic
 
@@ -30,12 +30,17 @@ class LoginView(Login):
     form_class = LoginForm
     template_name = 'login.html'
 
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('chat')
+        return super(LoginView, self).get(request, *args, **kwargs)
+
 
 @login_required
 def ajax_load_messages(request, pk):
     """ Получение/отправка сообщения. """
     chat = get_object_or_404(Chat, pk=pk)
-    messages = Message.objects.filter(chat=chat)
+    messages = Message.objects.filter(chat=chat).select_related('sender')
     message_list = [{
         "sender": message.sender.username,
         "message": message.message,

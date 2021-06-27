@@ -6,5 +6,5 @@ urlpatterns = [
     path('chat/', ChatListView.as_view(), name='chat'),
     path("ajax/<int:pk>/", ajax_load_messages, name="chat-ajax"),
 
-    path('login/', LoginView.as_view(), name='login'),
+    path('', LoginView.as_view(), name='login'),
 ]

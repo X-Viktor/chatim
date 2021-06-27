@@ -21,7 +21,6 @@ time, mark, audio, video {
 
 body {
     line-height: 1;
-    z-index: 999;
 }
 
 ol, ul {
@@ -48,6 +47,7 @@ body {
     font-family: 'Open Sans', Arial, sans-serif;
     font-size: 12px;
     color: #333f4d;
+    height: 100vh;
 }
 
 b {
@@ -58,10 +58,14 @@ b {
     background: #fff;
     box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
     overflow: hidden;
-    height: 100vh;
     position: relative;
     display: flex;
     flex-direction: column;
+    height: inherit;
+}
+
+.window-area {
+    height: inherit;
 }
 
 .conversation-list {
@@ -70,8 +74,8 @@ b {
     float: left;
     display: flex;
     flex-direction: column;
-    height: 100vh;
     justify-content: space-between;
+    height: inherit;
 }
 
 .conversation-list ul li span {
@@ -115,7 +119,7 @@ b {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    height: 100vh;
+    height: inherit;
 }
 
 .chat-area .title {
@@ -231,4 +235,8 @@ b {
     color: #fff;
     font-weight: bold;
     margin-left: 10px;
+}
+
+@media only screen and (max-width: 767px) {
+    
 }

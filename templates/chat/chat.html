@@ -16,7 +16,7 @@
             <div class="conversation-list">
                 <ul>
                     {% for chat in chats %}
-                        <li class="item active"><span id="{{ chat.pk }}">{{ chat.title }}</span></li>
+                        <li class="item"><span id="{{ chat.pk }}">{{ chat.title }}</span></li>
                     {% endfor %}
                 </ul>
                 <div class="my-account">
@@ -105,6 +105,11 @@
         let open_chat = (e) => {
             clearTimeout(timer);
             let chat = document.querySelector('.chat-area');
+            let active_chat = document.querySelector('.conversation-list .active');
+            if (active_chat) {
+                active_chat.classList.remove('active');
+            }
+            e.target.parentNode.classList.add('active');
             fetch(`/ajax/${e.target.id}`)
                 .then(e => e.json())
                 .then(messages => {
